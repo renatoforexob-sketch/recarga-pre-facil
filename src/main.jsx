@@ -46,9 +46,9 @@ function Footer() {
     </div>
     <div>
       <strong>Transparência</strong>
-      <p>Razão Social: It Byou Plataforma de Tecnologia LTDA</p>
-      <p>CNPJ: 36.365.474/0001-84</p>
-      <a href="mailto:contato@recargatodahora.online">contato@recargatodahora.online</a>
+      <p>Razão Social: Safe Check & Cia LTDA</p>
+      <p>CNPJ: 07.917.274/0001-99</p>
+      <a href="mailto:contato@recargatodahora.online">contato@recargaprefacil.online</a>
     </div>
     <div className="footer-legal">
       <a href="/termos-de-uso.html">Termos de Uso</a>
