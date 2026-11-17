@@ -1,8 +1,10 @@
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import QRCode from 'qrcode';
 import './styles.css';
+
+const CUSTOMER_NAME = 'Recarga Fácil';
+const CUSTOMER_EMAIL = 'contato@recargaprefacil.online';
 
 const operators = {
   algar: {
@@ -165,8 +167,8 @@ function Footer() {
         <strong>Transparência</strong>
         <p>Razão Social: Safe Check & Cia LTDA</p>
         <p>CNPJ: 07.917.274/0001-99</p>
-        <a href="mailto:contato@recargaprefacil.online">
-          contato@recargaprefacil.online
+        <a href={`mailto:${CUSTOMER_EMAIL}`}>
+          {CUSTOMER_EMAIL}
         </a>
       </div>
 
@@ -509,26 +511,12 @@ function Home() {
 
 function OperatorPage({ operator }) {
   const [phone, setPhone] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [selected, setSelected] = useState(40);
   const [error, setError] = useState('');
   const [faq, setFaq] = useState(null);
 
   const submit = e => {
     e.preventDefault();
-
-    if (name.trim().length < 2) {
-      return setError('Informe seu nome completo.');
-    }
-
-    if (name.trim().length > 200) {
-      return setError('O nome deve ter no máximo 200 caracteres.');
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      return setError('Informe um e-mail válido.');
-    }
 
     if (onlyDigits(phone).length < 10) {
       return setError('Informe um número de celular válido.');
@@ -543,12 +531,14 @@ function OperatorPage({ operator }) {
     try {
       idempotencyKey = window.crypto.randomUUID();
     } catch {
-      return setError('Seu navegador não conseguiu iniciar uma cobrança segura. Atualize o navegador e tente novamente.');
+      return setError(
+        'Seu navegador não conseguiu iniciar uma cobrança segura. Atualize o navegador e tente novamente.'
+      );
     }
 
     const data = {
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
+      name: CUSTOMER_NAME,
+      email: CUSTOMER_EMAIL,
       phone: formatPhone(phone),
       operator: operator.slug,
       operatorName: operator.name,
@@ -606,54 +596,6 @@ function OperatorPage({ operator }) {
             <div className="operator-step-title">
               <span>1</span>
               <div>
-                <strong>Seus dados</strong>
-                <small>Precisamos dessas informações para gerar seu Pix.</small>
-              </div>
-            </div>
-
-            <label className="field-label" htmlFor="customer-name">
-              Nome completo
-            </label>
-
-            <input
-              id="customer-name"
-              className="phone-input"
-              type="text"
-              autoComplete="name"
-              placeholder="Digite seu nome completo"
-              value={name}
-              onChange={e => {
-                setName(e.target.value);
-                setError('');
-              }}
-              required
-              minLength={2}
-              maxLength={200}
-            />
-
-            <label className="field-label" htmlFor="customer-email">
-              E-mail
-            </label>
-
-            <input
-              id="customer-email"
-              className="phone-input"
-              type="email"
-              autoComplete="email"
-              placeholder="seuemail@exemplo.com"
-              value={email}
-              onChange={e => {
-                setEmail(e.target.value);
-                setError('');
-              }}
-              required
-            />
-          </div>
-
-          <div className="operator-form-section">
-            <div className="operator-step-title">
-              <span>2</span>
-              <div>
                 <strong>Informe o número</strong>
                 <small>
                   Digite o celular {operator.name} que receberá a recarga.
@@ -686,7 +628,7 @@ function OperatorPage({ operator }) {
 
           <div className="operator-values-section">
             <div className="operator-step-title">
-              <span>3</span>
+              <span>2</span>
               <div>
                 <strong>Escolha o valor da recarga</strong>
                 <small>Selecione uma das opções abaixo.</small>
@@ -826,8 +768,6 @@ function PaymentPage() {
     if (
       !saved.phone ||
       !saved.operator ||
-      !saved.name ||
-      !saved.email ||
       !saved.idempotencyKey
     ) {
       go(`/recarga-${saved.operator || 'claro'}`);
@@ -848,8 +788,8 @@ function PaymentPage() {
             amount,
             idempotencyKey: saved.idempotencyKey,
             customer: {
-              name: saved.name,
-              email: saved.email,
+              name: CUSTOMER_NAME,
+              email: CUSTOMER_EMAIL,
               phone: onlyDigits(saved.phone)
             }
           })
@@ -1092,12 +1032,12 @@ function PaymentPage() {
 
             <div className="summary-line">
               <span>Cliente</span>
-              <strong>{saved.name}</strong>
+              <strong>{CUSTOMER_NAME}</strong>
             </div>
 
             <div className="summary-line">
               <span>E-mail</span>
-              <strong>{saved.email}</strong>
+              <strong>{CUSTOMER_EMAIL}</strong>
             </div>
 
             <div className="summary-line">
