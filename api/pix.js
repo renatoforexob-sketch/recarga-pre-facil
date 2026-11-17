@@ -1,160 +1,150 @@
 
-const API_URL =
-  `${process.env.NEXFAY_API_URL || 'https://nexfay.com.br/api/public/v1'}/pix/charges`;
+const API_URL = (process.env.NEXFAY_API_URL || 'https://nexfay.com.br/api/public/v1').replace(/\/$/, '');
 
-function json(res, status, body) {
-  return res.status(status).json(body);
-}
-
-function makeIdempotencyKey() {
-  return `RTH-${crypto.randomUUID()}`;
-}
+const OFFERS = {
+  20: process.env.NEXFAY_OFFER_20,
+  25: process.env.NEXFAY_OFFER_25,
+  30: process.env.NEXFAY_OFFER_30,
+  35: process.env.NEXFAY_OFFER_35,
+  40: process.env.NEXFAY_OFFER_40,
+  50: process.env.NEXFAY_OFFER_50,
+  60: process.env.NEXFAY_OFFER_60,
+  70: process.env.NEXFAY_OFFER_70,
+  100: process.env.NEXFAY_OFFER_100,
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return json(res, 405, {
+    return res.status(405).json({
       success: false,
-      message: 'Método não permitido.'
+      message: 'Método não permitido.',
     });
   }
 
   const apiKey = process.env.NEXFAY_API_KEY;
 
   if (!apiKey) {
-    return json(res, 500, {
+    return res.status(500).json({
       success: false,
-      message: 'NEXFAY_API_KEY não configurada na Vercel.'
+      message: 'NEXFAY_API_KEY não está configurada na Vercel.',
     });
   }
 
   const input = req.body || {};
-  const metadata =
-    input.metadata && typeof input.metadata === 'object'
-      ? input.metadata
-      : {};
-
   const amount = Number(input.amount);
-
-  if (!Number.isFinite(amount) || amount < 0.01 || amount > 1000) {
-    return json(res, 400, {
-      success: false,
-      message: 'Valor de recarga inválido.'
-    });
-  }
-
-  // Mapeamento das ofertas cadastradas na NexFay.
-  const offers = {
-    '10.00': process.env.NEXFAY_OFFER_10,
-    '20.00': process.env.NEXFAY_OFFER_20,
-    '30.00': process.env.NEXFAY_OFFER_30,
-    '50.00': process.env.NEXFAY_OFFER_50,
-    '100.00': process.env.NEXFAY_OFFER_100
-  };
-
-  const offerId = offers[amount.toFixed(2)];
-
-  if (!offerId) {
-    return json(res, 422, {
-      success: false,
-      message: 'Não existe uma oferta NexFay configurada para este valor.'
-    });
-  }
-
-  const customerName = String(input.customer?.name || input.name || '').trim();
-  const customerEmail = String(input.customer?.email || input.email || '').trim();
-  const customerPhone = String(
-    input.customer?.phone || metadata.telefone || ''
+  const customer = input.customer || {};
+  const name = String(customer.name || '').trim();
+  const email = String(customer.email || '').trim().toLowerCase();
+  const phone = String(customer.phone || '').replace(/\D/g, '');
+  const idempotencyKey = String(
+    req.headers['idempotency-key'] || input.idempotencyKey || ''
   ).trim();
 
-  if (customerName.length < 2 || customerName.length > 200) {
-    return json(res, 400, {
+  if (!Number.isInteger(amount) || !OFFERS[amount]) {
+    return res.status(400).json({
       success: false,
-      message: 'Nome do cliente inválido.'
+      message: 'Valor de recarga inválido ou oferta não configurada.',
     });
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
-    return json(res, 400, {
+  if (!OFFERS[amount]) {
+    return res.status(400).json({
       success: false,
-      message: 'E-mail do cliente inválido.'
+      message: `A oferta de R$ ${amount} não está configurada na Vercel.`,
     });
   }
 
-  const idempotencyKey = makeIdempotencyKey();
+  if (name.length < 2 || name.length > 200) {
+    return res.status(400).json({
+      success: false,
+      message: 'Informe o nome do cliente com pelo menos 2 caracteres.',
+    });
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Informe um e-mail válido.',
+    });
+  }
+
+  if (idempotencyKey.length < 16 || idempotencyKey.length > 128) {
+    return res.status(400).json({
+      success: false,
+      message: 'Chave de idempotência inválida. Atualize a página e tente novamente.',
+    });
+  }
 
   const payload = {
-    offer_id: offerId,
+    offer_id: OFFERS[amount],
     customer: {
-      name: customerName,
-      email: customerEmail,
-      ...(customerPhone ? { phone: customerPhone } : {})
+      name,
+      email,
+      ...(phone ? { phone } : {}),
     },
-    quantity: 1
+    quantity: 1,
   };
 
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(`${API_URL}/pix/charges`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'Idempotency-Key': idempotencyKey
+        'Idempotency-Key': idempotencyKey,
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
-    const data = await response.json().catch(() => ({}));
+    const result = await response.json().catch(() => ({}));
+    const charge = result.data || result;
 
-    if (![200, 201, 202].includes(response.status)) {
-      return json(res, response.status, {
+    if (!response.ok) {
+      const messages = {
+        401: 'Credencial NexFay inválida. Confira a NEXFAY_API_KEY.',
+        403: 'A conta NexFay não está autorizada a criar cobranças.',
+        404: 'Oferta não encontrada. Confira o ID da oferta na Vercel.',
+        409: 'Esta chave já foi usada com dados diferentes. Não gere outra cobrança automaticamente.',
+        422: 'A NexFay recusou os dados da cobrança.',
+        429: 'Limite de requisições atingido. Aguarde e tente novamente.',
+        503: 'NexFay temporariamente indisponível. Tente novamente mantendo a mesma chave.',
+      };
+
+      return res.status(response.status).json({
         success: false,
-        message:
-          data.message ||
-          data.error ||
-          'Não foi possível gerar o PIX NexFay.',
-        requestId: data.request_id || null
+        message: result.message || result.error || messages[response.status] || 'Não foi possível criar a cobrança Pix.',
+        requestId: result.request_id || null,
+        retryWithSameKey: [202, 503].includes(response.status),
       });
     }
 
-    const pix = data.pix || {};
+    const pix = charge.pix || {};
 
-    if (!data.transaction_id) {
-      return json(res, 502, {
-        success: false,
-        message: 'A NexFay não retornou o identificador da transação.',
-        requestId: data.request_id || null
-      });
-    }
-
-    return json(res, response.status, {
+    return res.status(response.status === 201 ? 201 : 200).json({
       success: true,
       data: {
-        transactionId: data.transaction_id,
-        orderId: data.order_id || null,
-        status: data.status || 'pending',
-        amount: data.amount_cents,
-        amountDisplay:
-          typeof data.amount_cents === 'number'
-            ? (data.amount_cents / 100).toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-              })
-            : null,
+        transactionId: charge.transaction_id || charge.id || null,
+        orderId: charge.order_id || null,
+        status: charge.status || 'pending',
+        amount: charge.amount_cents ?? null,
+        fee: charge.fee_cents ?? null,
         paymentData: {
           copyPaste: pix.copy_paste || '',
-          qrCodeBase64: null,
-          qrCode: pix.qr_code || ''
+          qrCode: pix.qr_code || '',
+          qrCodeBase64: pix.qr_code || null,
         },
         expiresAt: pix.expires_at || null,
-        requestId: data.request_id || null
-      }
+        createdAt: charge.created_at || null,
+        requestId: charge.request_id || null,
+      },
     });
   } catch (error) {
-    console.error('Erro NexFay:', error.message);
+    console.error('Erro NexFay:', error);
 
-    return json(res, 502, {
+    return res.status(502).json({
       success: false,
-      message: 'Falha de comunicação com a NexFay.'
+      message: 'Não foi possível conectar à NexFay. Tente novamente usando a mesma cobrança.',
+      retryWithSameKey: true,
     });
   }
 }
