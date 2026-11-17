@@ -1,13 +1,11 @@
 
-const API_BASE =
-  process.env.NEXFAY_API_URL ||
-  'https://nexfay.com.br/api/public/v1';
+const API_URL = (process.env.NEXFAY_API_URL || 'https://nexfay.com.br/api/public/v1').replace(/\/$/, '');
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
-      message: 'Método não permitido.'
+      message: 'Método não permitido.',
     });
   }
 
@@ -16,65 +14,61 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(500).json({
       success: false,
-      message: 'NEXFAY_API_KEY não configurada.'
+      message: 'NEXFAY_API_KEY não está configurada na Vercel.',
     });
   }
 
-  const transactionId = String(
-    req.query?.id || req.query?.transactionId || ''
-  );
+  const id = String(req.query.id || '').trim();
 
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      transactionId
-    )
-  ) {
+  if (!id) {
     return res.status(400).json({
       success: false,
-      message: 'ID de transação inválido.'
+      message: 'Informe o ID da transação.',
     });
   }
 
   try {
     const response = await fetch(
-      `${API_BASE}/pix/charges/${encodeURIComponent(transactionId)}`,
+      `${API_URL}/pix/charges/${encodeURIComponent(id)}`,
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${apiKey}`
-        }
+          Authorization: `Bearer ${apiKey}`,
+          Accept: 'application/json',
+        },
       }
     );
 
-    const data = await response.json().catch(() => ({}));
+    const result = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       return res.status(response.status).json({
         success: false,
-        message:
-          data.message ||
-          data.error ||
-          'Não foi possível consultar o pagamento.'
+        message: result.message || result.error || 'Não foi possível consultar o pagamento.',
+        requestId: result.request_id || null,
       });
     }
+
+    const charge = result.data || result;
 
     return res.status(200).json({
       success: true,
       data: {
-        transactionId: data.transaction_id,
-        orderId: data.order_id || null,
-        status: data.status,
-        amount: data.amount_cents,
-        paidAt: data.paid_at || null,
-        createdAt: data.created_at || null
-      }
+        transactionId: charge.transaction_id || charge.id || id,
+        orderId: charge.order_id || null,
+        status: String(charge.status || 'pending').toLowerCase(),
+        amount: charge.amount_cents ?? null,
+        paidAt: charge.paid_at || null,
+        createdAt: charge.created_at || null,
+        expiresAt: charge.pix?.expires_at || null,
+      },
     });
   } catch (error) {
-    console.error('Erro consulta NexFay:', error.message);
+    console.error('Erro ao consultar NexFay:', error);
 
     return res.status(502).json({
       success: false,
-      message: 'Falha ao consultar a NexFay.'
+      message: 'Não foi possível conectar à NexFay para consultar o pagamento.',
     });
   }
 }
