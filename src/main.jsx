@@ -7,7 +7,7 @@ const CUSTOMER_NAME = 'Recarga Fácil';
 const CUSTOMER_EMAIL = 'contato@recargaprefacil.online';
 
 const NEXFAY_CHECKOUTS = {
-  20: 'https://nexfay.com.br/p/nexfay-offer-20-d7a6d3'
+  20: 'https://nexfay.com.br/c/nexfay-offer-20-d7a6d3'
 };
 
 const operators = {
