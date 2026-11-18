@@ -36,13 +36,13 @@ const NEXFAY_CHECKOUTS = {
   },
 
   tim: {
-    20: '',
-    25: '',
-    30: '',
-    35: '',
-    40: '',
-    50: '',
-    60: '',
+    20: 'https://xyronbot.com.br/c/recarga-tim-r-20',
+    25: 'https://xyronbot.com.br/c/recarga-tim-r-25',
+    30: 'https://xyronbot.com.br/c/recarga-tim-r-30',
+    35: 'https://xyronbot.com.br/c/recarga-tim-r-35',
+    40: 'https://xyronbot.com.br/c/recarga-tim-r-40',
+    50: 'https://xyronbot.com.br/c/recarga-tim-r-50',
+    60: 'https://xyronbot.com.br/c/recarga-tim-r-60',
     70: 'https://xyronbot.com.br/c/recarga-tim-r-70',
     100: 'https://xyronbot.com.br/c/recarga-tim-r-100'
   },
