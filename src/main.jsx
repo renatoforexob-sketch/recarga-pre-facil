@@ -36,7 +36,17 @@ const NEXFAY_CHECKOUTS = {
     70: 'https://nexfay.com.br/c/recarga-claro-r-70-i7jy',
     100: 'https://nexfay.com.br/c/recarga-claro-r-100-4bjl'
   },
-  tim: {},
+  tim: {
+    20: 'https://nexfay.com.br/c/recarga-vivo-r-20-7xz4',
+    25: 'https://nexfay.com.br/c/recarga-vivo-r-25-ecrl',
+    30: 'https://nexfay.com.br/c/recarga-vivo-r-30-z3xb',
+    35: 'https://nexfay.com.br/c/recarga-vivo-r-35-8v48',
+    40: 'https://nexfay.com.br/c/recarga-vivo-r-40-jd78',
+    50: 'https://nexfay.com.br/c/recarga-vivo-r-50-k9d6',
+    60: 'https://nexfay.com.br/c/recarga-vivo-r-60-dv5a',
+    70: 'https://nexfay.com.br/c/recarga-vivo-r-70-00-uy05',
+    100: 'https://xyronbot.com.br/c/recarga-tim-r-100'
+  },
   surf: {},
   correios: {},
   algar: {}
