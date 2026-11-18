@@ -6,9 +6,35 @@ import './styles.css';
 const CUSTOMER_NAME = 'Recarga Fácil';
 const CUSTOMER_EMAIL = 'contato@recargaprefacil.online';
 
+/* =====================================================
+   CHECKOUTS NEXFAY POR OPERADORA
+   Vivo configurada.
+   Demais operadoras prontas para receber os links.
+===================================================== */
+
 const NEXFAY_CHECKOUTS = {
-  20: 'https://nexfay.com.br/c/nexfay-offer-20-d7a6d3'
+  vivo: {
+    20: 'https://nexfay.com.br/c/recarga-vivo-creditos-para-celular-b220fa',
+    25: 'https://nexfay.com.br/c/recarga-vivo-r-25-ecrl',
+    30: 'https://nexfay.com.br/c/recarga-vivo-r-30-z3xb',
+    35: 'https://nexfay.com.br/c/recarga-vivo-r-35-8v48',
+    40: 'https://nexfay.com.br/c/recarga-vivo-r-40-jd78',
+    50: 'https://nexfay.com.br/c/recarga-vivo-r-50-k9d6',
+    60: 'https://nexfay.com.br/c/recarga-vivo-r-60-dv5a',
+    70: 'https://nexfay.com.br/c/recarga-vivo-r-70-00-uy05',
+    100: 'https://nexfay.com.br/c/recarga-vivo-r-100-w0ai'
+  },
+
+  claro: {},
+  tim: {},
+  surf: {},
+  correios: {},
+  algar: {}
 };
+
+/* =====================================================
+   OPERADORAS
+===================================================== */
 
 const operators = {
   algar: {
@@ -20,6 +46,7 @@ const operators = {
     bonus: 'Até 8 GB de bônus',
     banner: '/assets/images/banner-algar.png'
   },
+
   claro: {
     slug: 'claro',
     name: 'Claro',
@@ -29,6 +56,7 @@ const operators = {
     bonus: 'Até 5 GB de bônus',
     banner: '/assets/images/banner-claro.png'
   },
+
   correios: {
     slug: 'correios',
     name: 'Correios Celular',
@@ -38,6 +66,7 @@ const operators = {
     bonus: 'Até 6 GB de bônus',
     banner: '/assets/images/banner-correios.png'
   },
+
   surf: {
     slug: 'surf',
     name: 'Surf Telecom',
@@ -47,6 +76,7 @@ const operators = {
     bonus: 'Até 10 GB de bônus',
     banner: '/assets/images/banner-surf.png'
   },
+
   tim: {
     slug: 'tim',
     name: 'TIM',
@@ -56,6 +86,7 @@ const operators = {
     bonus: 'Até 10 GB de bônus',
     banner: '/assets/images/banner-tim.png'
   },
+
   vivo: {
     slug: 'vivo',
     name: 'Vivo',
@@ -66,6 +97,10 @@ const operators = {
     banner: '/assets/images/banner-vivo.png'
   }
 };
+
+/* =====================================================
+   VALORES E BÔNUS
+===================================================== */
 
 const values = [20, 25, 30, 35, 40, 50, 60, 70, 100];
 
@@ -81,7 +116,8 @@ const bonusByValue = {
   100: '50 GB'
 };
 
-const planBonus = value => `${bonusByValue[value] || '4 GB'} • 30 dias`;
+const planBonus = value =>
+  `${bonusByValue[value] || '4 GB'} • 30 dias`;
 
 const money = value =>
   new Intl.NumberFormat('pt-BR', {
@@ -111,7 +147,9 @@ function go(to) {
   window.scrollTo(0, 0);
 }
 
-/* CABEÇALHO */
+/* =====================================================
+   CABEÇALHO
+===================================================== */
 
 function Header() {
   const openOperators = () => {
@@ -121,6 +159,7 @@ function Header() {
       });
     } else {
       go('/');
+
       setTimeout(() => {
         document.getElementById('operadoras')?.scrollIntoView({
           behavior: 'smooth'
@@ -149,7 +188,9 @@ function Header() {
   );
 }
 
-/* RODAPÉ */
+/* =====================================================
+   RODAPÉ
+===================================================== */
 
 function Footer() {
   return (
@@ -190,7 +231,9 @@ function Footer() {
   );
 }
 
-/* DEPOIMENTOS */
+/* =====================================================
+   DEPOIMENTOS
+===================================================== */
 
 function Testimonials() {
   const testimonials = [
@@ -286,7 +329,9 @@ function Testimonials() {
   );
 }
 
-/* PÁGINA INICIAL */
+/* =====================================================
+   PÁGINA INICIAL
+===================================================== */
 
 function Home() {
   const [faq, setFaq] = useState(null);
@@ -310,7 +355,7 @@ function Home() {
     ],
     [
       'Como faço o pagamento?',
-      'Depois de informar o número e escolher o valor, você segue para o checkout seguro da NexFay. As formas de pagamento disponíveis são apresentadas no checkout.'
+      'Depois de informar o número e escolher o valor, você segue para o checkout da NexFay. As formas de pagamento disponíveis são apresentadas no checkout.'
     ],
     [
       'A recarga é para celular pré-pago?',
@@ -511,14 +556,23 @@ function Home() {
   );
 }
 
-/* PÁGINA DE RECARGA DA OPERADORA */
+/* =====================================================
+   PÁGINA DE RECARGA DA OPERADORA
+===================================================== */
 
 function OperatorPage({ operator }) {
   const [phone, setPhone] = useState('');
   const [selected, setSelected] = useState(20);
   const [error, setError] = useState('');
-
   const [faq, setFaq] = useState(null);
+
+  const operatorCheckouts = NEXFAY_CHECKOUTS[operator.slug] || {};
+
+  const availableValues = values.filter(value =>
+    Boolean(operatorCheckouts[value])
+  );
+
+  const hasCheckouts = availableValues.length > 0;
 
   const submit = e => {
     e.preventDefault();
@@ -535,11 +589,11 @@ function OperatorPage({ operator }) {
       return setError('Escolha um valor de recarga válido.');
     }
 
-    const checkoutUrl = NEXFAY_CHECKOUTS[amount];
+    const checkoutUrl = operatorCheckouts[amount];
 
     if (!checkoutUrl) {
       return setError(
-        'O checkout deste valor ainda não está disponível. Por enquanto, escolha R$ 20,00.'
+        `O checkout de ${money(amount)} para ${operator.name} ainda não está disponível.`
       );
     }
 
@@ -649,13 +703,14 @@ function OperatorPage({ operator }) {
 
             <div className="modern-value-grid">
               {values.map(value => {
-                const available = Boolean(NEXFAY_CHECKOUTS[value]);
+                const available = Boolean(operatorCheckouts[value]);
 
                 return (
                   <button
                     type="button"
                     key={value}
-                    className={`modern-value-option ${selected === value ? 'active' : ''}`}
+                    className={`modern-value-option ${selected === value ? 'active' : ''} ${!available ? 'unavailable' : ''}`}
+                    aria-disabled={!available}
                     onClick={() => {
                       setSelected(value);
                       setError('');
@@ -665,6 +720,7 @@ function OperatorPage({ operator }) {
                       <span>
                         {available ? 'CHECKOUT DISPONÍVEL' : 'INDISPONÍVEL'}
                       </span>
+
                       <strong>{money(value)}</strong>
                     </div>
 
@@ -680,10 +736,18 @@ function OperatorPage({ operator }) {
               })}
             </div>
 
-            <p className="bonus-note">
-              Por enquanto, somente o checkout de R$ 20,00 está habilitado.
-              Os demais valores serão liberados após a configuração dos links.
-            </p>
+            {operator.slug === 'vivo' ? (
+              <p className="bonus-note">
+                Os nove checkouts da Vivo estão configurados.
+                Selecione o valor desejado para continuar.
+              </p>
+            ) : (
+              <p className="bonus-note">
+                Os valores já estão preparados para esta operadora.
+                Os checkouts serão habilitados assim que os respectivos
+                links da NexFay forem adicionados.
+              </p>
+            )}
           </div>
 
           {error && <div className="form-error">{error}</div>}
@@ -695,8 +759,15 @@ function OperatorPage({ operator }) {
               <span>+{bonusByValue[selected]} de bônus • 30 dias</span>
             </div>
 
-            <button className="primary" type="submit">
-              Continuar para pagamento <span>→</span>
+            <button
+              className="primary"
+              type="submit"
+              disabled={!operatorCheckouts[selected]}
+            >
+              {operatorCheckouts[selected]
+                ? 'Continuar para pagamento'
+                : 'Checkout indisponível'}
+              <span>→</span>
             </button>
           </div>
         </form>
@@ -744,7 +815,9 @@ function OperatorPage({ operator }) {
                     : i === 1
                       ? 'Não. O fluxo de recarga não exige criação de conta.'
                       : i === 2
-                        ? 'Por enquanto, somente o checkout de R$ 20,00 está habilitado.'
+                        ? hasCheckouts
+                          ? `Existem ${availableValues.length} valores com checkout configurado para esta operadora.`
+                          : 'Os valores estão preparados, mas os links de checkout ainda serão adicionados.'
                         : 'O pagamento é realizado no checkout hospedado da NexFay.'}
                 </p>
               )}
@@ -758,7 +831,9 @@ function OperatorPage({ operator }) {
   );
 }
 
-/* APLICAÇÃO E ROTAS */
+/* =====================================================
+   APLICAÇÃO E ROTAS
+===================================================== */
 
 function App() {
   const [, refresh] = useState(0);
@@ -778,7 +853,9 @@ function App() {
   if (currentPath === '/pagamento') {
     const saved = (() => {
       try {
-        return JSON.parse(sessionStorage.getItem('recargaData') || '{}');
+        return JSON.parse(
+          sessionStorage.getItem('recargaData') || '{}'
+        );
       } catch {
         return {};
       }
@@ -796,11 +873,13 @@ function App() {
   if (currentPath.startsWith('/recarga-')) {
     const slug = currentPath.replace('/recarga-', '');
 
-    return (
-      <OperatorPage
-        operator={operators[slug] || operators.claro}
-      />
-    );
+    const operator = operators[slug];
+
+    if (operator) {
+      return <OperatorPage operator={operator} />;
+    }
+
+    return <Home />;
   }
 
   return <Home />;
