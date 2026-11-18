@@ -48,7 +48,17 @@ const NEXFAY_CHECKOUTS = {
   },
 
   surf: {},
-  correios: {},
+  correios: {
+     20: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-20',
+    25: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-25',
+    30: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-30',
+    35: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-35',
+    40: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-40',
+    50: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-50',
+    60: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-60',
+    70: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-70',
+    100: 'https://xyronbot.com.br/c/recarga-correios-pre-pago-100'
+  },
   algar: {}
 };
 
