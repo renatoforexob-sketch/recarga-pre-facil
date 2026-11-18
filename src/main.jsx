@@ -14,7 +14,7 @@ const CUSTOMER_EMAIL = 'contato@recargaprefacil.online';
 
 const NEXFAY_CHECKOUTS = {
   vivo: {
-    20: 'https://nexfay.com.br/c/recarga-vivo-creditos-para-celular-b220fa',
+    20: 'https://nexfay.com.br/c/recarga-vivo-r-20-7xz4',
     25: 'https://nexfay.com.br/c/recarga-vivo-r-25-ecrl',
     30: 'https://nexfay.com.br/c/recarga-vivo-r-30-z3xb',
     35: 'https://nexfay.com.br/c/recarga-vivo-r-35-8v48',
